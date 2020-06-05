@@ -1,22 +1,23 @@
 #include <stdio.h>
 
+#define CHANNEL_SIZE 256
+#define NUM_COLOURS 256 * 256 * 256
+#define WIDTH 4096
+#define HEIGHT 4096
+
 typedef unsigned char uchar;
 
 struct colour { uchar r, g, b; };
 
-const int         channel_size = 256;
-const int         num_colours = 256 * 256 * 256;
-const int         width = 4096, height = 4096;
-
-int               julia                   [width][height];
-struct colour     base_allrgb_sequence    [num_colours];
-int               histogram               [channel_size];
-struct colour     output                  [width][height];
+int               julia                   [WIDTH][HEIGHT];
+struct colour     base_allrgb_sequence    [NUM_COLOURS];
+int               histogram               [CHANNEL_SIZE];
+struct colour     output                  [WIDTH][HEIGHT];
 
 int quantise (double v) {
   if (v >= 1.0) v = 0.0;
   if (v < 0.0) v = 0.0;
-  return (int) (v * (double) channel_size);
+  return (int) (v * (double) CHANNEL_SIZE);
 }
 
 int main () {
@@ -25,12 +26,12 @@ int main () {
     const double zoom = 1.0;
     const double x_pos = 0.0, y_pos = 0.0;
     const double real = -0.7, imaginary = 0.27015;
-    for (int x = width; x--;) {
-      for (int y = height; y--;) {
+    for (int x = WIDTH; x--;) {
+      for (int y = HEIGHT; y--;) {
         double rp = real, ip = imaginary;
         int z = 0;
-        double rn = 1.5 * (x - width / 2.0) / (0.5 * zoom * width) + x_pos;
-        double in = (y - height / 2.0) / (0.5 * zoom * height) + y_pos;
+        double rn = 1.5 * (x - WIDTH / 2.0) / (0.5 * zoom * WIDTH) + x_pos;
+        double in = (y - HEIGHT / 2.0) / (0.5 * zoom * HEIGHT) + y_pos;
         for(z = 0; z < iteration_limit; z++) {
           rp = rn, ip = in;
           rn = rp * rp - ip * ip + real;
@@ -58,24 +59,24 @@ int main () {
   }
 
   { // Generate histogram. ---------------------------------
-    for (int i = channel_size; i--;) {
+    for (int i = CHANNEL_SIZE; i--;) {
       histogram[i] = 0;
     }
-    for (int i = 0; i < num_colours; i++) {
-      int x = i % width, y = (i - x) / height;
+    for (int i = 0; i < NUM_COLOURS; i++) {
+      int x = i % WIDTH, y = (i - x) / HEIGHT;
       uchar j = julia [x][y];
       histogram [j]++;
     }
   }
 
   { // Create output data. ---------------------------------
-    int cumulative_histogram[channel_size];
-    for (int i = 0; i < channel_size; i++) {
+    int cumulative_histogram[CHANNEL_SIZE];
+    for (int i = 0; i < CHANNEL_SIZE; i++) {
       cumulative_histogram [i] = histogram[i];
       if (i > 0) cumulative_histogram [i] += cumulative_histogram [i-1];
     }
-    for (int i = 0; i < num_colours; i++) {
-      int x = i % width, y = (i - x) / height;
+    for (int i = 0; i < NUM_COLOURS; i++) {
+      int x = i % WIDTH, y = (i - x) / HEIGHT;
       uchar j = julia [x][y];
       int uniqueId = --cumulative_histogram [j];
       output [x][y] = base_allrgb_sequence [uniqueId];
@@ -83,9 +84,9 @@ int main () {
   }
 
   { // Output to PPM file. ---------------------------------
-    printf("P6 %i %i 255 ", width, height);
-    for (int i = 0; i < num_colours; i++) {
-      int x = i % width, y = (i - x) / height;
+    printf("P6 %i %i 255 ", WIDTH, HEIGHT);
+    for (int i = 0; i < NUM_COLOURS; i++) {
+      int x = i % WIDTH, y = (i - x) / HEIGHT;
       struct colour v = output [x][y];
       printf ("%c%c%c", v.r, v.g, v.b);
     }

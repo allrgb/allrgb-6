@@ -28,13 +28,16 @@ if [ "$task_build" == "BUILD" ]; then
     do
        echo " * $e"
        gcc "$e".c -o "$e"
-       rm "$e".ppm || true
     done
 fi
 
 
 if [ "$task_run" == "RUN" ]; then
     echo "Running:"
+    for e in "${examples[@]}"
+    do
+       rm "$e".ppm || true
+    done
     for e in "${examples[@]}"
     do
        echo " * $e"
